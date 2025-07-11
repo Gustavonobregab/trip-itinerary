@@ -1,94 +1,74 @@
 'use client';
 
-export default function TripList() {
-  const trips = [
-    {
-      img: 'https://www.material-tailwind.com/image/blog-11.jpeg',
-      title: 'Alps Adventure',
-      desc: 'Explore the stunning views of the Swiss Alps with hiking routes and scenic stops.',
-    },
-    {
-      img: 'https://www.material-tailwind.com/image/blog-10.jpeg',
-      title: 'New York City',
-      desc: 'Dive into NYC’s culture, food, and unforgettable skyline.',
-    },
-    {
-      img: 'https://demos.creative-tim.com/material-kit-pro/assets/img/examples/card-blog2.jpg',
-      title: 'Beach Escape',
-      desc: 'Sun, sand, and surf — perfect coastal relaxation.',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1',
-      title: 'Tokyo Lights',
-      desc: 'Experience the blend of tradition and tech in Japan’s capital.',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad',
-      title: 'Patagonia Trek',
-      desc: 'Trek through glaciers, mountains and remote beauty in South America.',
-    },
-    {
-      img: 'https://images.unsplash.com/photo-1483683804023-6ccdb62f86ef',
-      title: 'Sahara Journey',
-      desc: 'Camel rides, starry nights, and desert dunes await.',
-    },
-    {
-        img: 'https://www.material-tailwind.com/image/blog-11.jpeg',
-        title: 'Alps Adventure',
-        desc: 'Explore the stunning views of the Swiss Alps with hiking routes and scenic stops.',
-      },
-      {
-        img: 'https://www.material-tailwind.com/image/blog-10.jpeg',
-        title: 'New York City',
-        desc: 'Dive into NYC’s culture, food, and unforgettable skyline.',
-      },
-      {
-        img: 'https://demos.creative-tim.com/material-kit-pro/assets/img/examples/card-blog2.jpg',
-        title: 'Beach Escape',
-        desc: 'Sun, sand, and surf — perfect coastal relaxation.',
-      },
-      {
-        img: 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1',
-        title: 'Tokyo Lights',
-        desc: 'Experience the blend of tradition and tech in Japan’s capital.',
-      },
-      {
-        img: 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad',
-        title: 'Patagonia Trek',
-        desc: 'Trek through glaciers, mountains and remote beauty in South America.',
-      },
-      {
-        img: 'https://images.unsplash.com/photo-1483683804023-6ccdb62f86ef',
-        title: 'Sahara Journey',
-        desc: 'Camel rides, starry nights, and desert dunes await.',
-      },
-  ];
+import { useState, useEffect } from "react";
 
+interface Trip {
+    id: string;
+    name: string;
+    photo_url: string;
+    description: string;
+  }
+  
+
+export default function TripList() {
+    const [trips, setTrips] = useState<Trip[]>([]);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const limit = 6;
+
+    
+    const fetchTrips = async (currentPage: number) => {
+        const res = await fetch(`/api/trips?page=${currentPage}&limit=${limit}`);
+        const result = await res.json();
+    
+        if (res.ok) {
+          setTrips((prev) => [...prev, ...result.data]);
+          setHasMore(result.data.length === limit);
+        } else {
+          console.error(result.error);
+        }
+      };
+    
+      useEffect(() => {
+        fetchTrips(page);
+      }, [page]);
+    
   return (
-    <div className="w-full px-6 py-10 pb-20 box-border ">
-      <div
+        <div className="w-full px-3 sm:px-6 py-10 pb-20 box-border">
+        <div
         className="grid gap-6"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         }}
       >
-        {trips.map((trip, index) => (
+        {trips.map((trip) => (
           <div
-            key={index}
-            className="card w-full min-w-[280px] shadow-md overflow-hidden"
-          >
+            key={trip.id}
+            className="card w-full max-w-[460px] min-h-[320px] shadow-md overflow-hidden flex flex-col"
+            >
             <div
-              className="img-responsive img-responsive-21x9 card-img-top"
-              style={{ backgroundImage: `url(${trip.img})` }}
+            className="h-48 bg-cover bg-center"
+            style={{ backgroundImage: `url(${trip.photo_url || ''})`  }}
             />
             <div className="card-body">
-              <h3 className="card-title">{trip.title}</h3>
-              <p className="text-secondary">{trip.desc}</p>
+              <h3 className="card-title">{trip.name}</h3>
+              <p className="text-secondary">{trip.description}</p>
             </div>
           </div>
         ))}
       </div>
+
+      {hasMore && (
+        <div className="mt-10 text-center">
+          <button
+            onClick={() => setPage((prev) => prev + 1)}
+            className="px-6 py-2 bg-black text-white rounded hover:bg-gray-800 transition"
+          >
+            Load more trips
+          </button>
+        </div>
+      )}
     </div>
   );
   
