@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabaseClient";
 import TripDetails from "./TripDetails";
 
 interface Trip {
@@ -12,94 +14,133 @@ interface Trip {
   
 
 export default function TripList() {
+    const { user, isLoading } = useAuth();
     const [trips, setTrips] = useState<Trip[]>([]);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
     const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
     const limit = 6;
 
     
-    const fetchTrips = async (currentPage: number) => {
+    const fetchTrips = async (currentPage: number) => {  
         setLoading(true);
+        setError(null);
+        
         try {
-        const res = await fetch(`/api/trips?page=${currentPage}&limit=${limit}`);
-        const result = await res.json();
-
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            const headers: HeadersInit = {
+              'Content-Type': 'application/json',
+            };
+        
+            if (session?.access_token) {
+              headers['Authorization'] = `Bearer ${session.access_token}`;
+            }
+ 
+            const res = await fetch(`/api/trips?page=${currentPage}&limit=${limit}`, {
+              headers,
+            });
+                  
+            const result = await res.json();
     
-        if (res.ok) {
-          setTrips((prev) => {
-            const existingIds = new Set(prev.map((t) => t.id));
-            const uniqueNewTrips = (result.data as Trip[]).filter((t) => !existingIds.has(t.id));
-            return [...prev, ...uniqueNewTrips];
-          });
-          setHasMore(result.data.length === limit);
-        } else {
-          console.error(result.error);
+            if (res.ok) {
+                setTrips((prev) => {
+                    const existingIds = new Set(prev.map((t) => t.id));
+                    const uniqueNewTrips = (result.data as Trip[]).filter((t) => !existingIds.has(t.id));
+                    return [...prev, ...uniqueNewTrips];
+                });
+                setHasMore(result.data.length === limit);
+            }
+
+        } catch (error) {
+            console.error("Failed to fetch trips:", error);
+            setError("Failed to fetch trips. Please try again.");
+        } finally {
+            setLoading(false);
         }
-    } catch (error) {
-        console.error("Failed to fetch trips:", error);
-      } finally {
-        setLoading(false);
-      }
-      };
+    };
 
     
-      useEffect(() => {
-        fetchTrips(page);
-      }, [page]);
+    useEffect(() => {
+        if (!isLoading) {
+            fetchTrips(page);
+        } 
+    }, [page, user, isLoading]);
 
-  if (loading && trips.length === 0) {
-    return (
-      <div className="flex justify-center items-center py-20">
-        <div className="spinner-border" role="status"></div>
-      </div>
-    );
-  }
-
-    
-  return (
-        <div className="w-full px-3 sm:px-6 py-10 pb-20 box-border">
-       <div className="w-full px-3 sm:px-6 py-10 pb-20 box-border">
-        <div
-          className="grid gap-6"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          }}
-        >
-          {trips.map((trip) => (
-            <div
-              key={trip.id}
-              className="relative h-[30rem] rounded-xl overflow-hidden cursor-pointer group"
-              onClick={() => setSelectedTripId(trip.id)}
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
-                style={{ backgroundImage: `url(${trip.photo_url || ''})` }}
-              />
-              <div className="absolute inset-0 bg-black/60" />
-              <div className="absolute inset-0 flex flex-col justify-end p-6 z-10">
-                <h3 className="text-white text-2xl font-bold">{trip.name}</h3>
-                <p className="mt-2 text-white text-sm">
-                  {trip.description.length > 15
-                    ? `${trip.description.slice(0, 45)}...`
-                    : trip.description}
-                </p>
-              </div>
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center py-20">
+                <div className="spinner-border" role="status"></div>
             </div>
-          ))}
-        </div>
+        );
+    }
 
-  {selectedTripId && (
-    <TripDetails id={selectedTripId} onClose={() => setSelectedTripId(null)} />
-  )}
-</div>
+    return (
+        <div className="w-full px-3 sm:px-6 py-10 pb-20 box-border">
+            {error && (
+                <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                    {error}
+                    <button 
+                        onClick={() => fetchTrips(1)}
+                        className="ml-4 text-red-700 underline hover:no-underline"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            )}
+
+            {!loading && !error && (
+                  <div className="mb-6 text-center text-gray-700">
+                    {user
+                      ? "Your trips."
+                      : "Those are public trips ."}
+                  </div>
+                )}
+            
+            <div
+                className="grid gap-6"
+                style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                }}
+            >
+                {trips.map((trip) => (
+                    <div
+                        key={trip.id}
+                        className="relative h-[30rem] rounded-xl overflow-hidden cursor-pointer group"
+                        onClick={() => setSelectedTripId(trip.id)}
+                    >
+                        <div
+                            className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
+                            style={{ backgroundImage: `url(${trip.photo_url || ''})` }}
+                        />
+                        <div className="absolute inset-0 bg-black/60" />
+                        <div className="absolute inset-0 flex flex-col justify-end p-6 z-10">
+                            <h3 className="text-white text-2xl font-bold">{trip.name}</h3>
+                            <p className="mt-2 text-white text-sm">
+                                {trip.description.length > 15
+                                    ? `${trip.description.slice(0, 45)}...`
+                                    : trip.description}
+                            </p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {trips.length === 0 && !loading && !error && (
+                <div className="flex flex-col items-center justify-center py-20">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-4">No Trips Yet</h2>
+                    <p className="text-gray-600 mb-6">Start planning your next adventure!</p>
+                </div>
+            )}
+
+       
 
             {selectedTripId && (
-              <TripDetails id={selectedTripId} onClose={() => setSelectedTripId(null)} />
-              )}     
-    </div>
-  );
-  
+                <TripDetails id={selectedTripId} onClose={() => setSelectedTripId(null)} />
+            )}
+        </div>
+    );
 }
