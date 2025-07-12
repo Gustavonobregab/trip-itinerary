@@ -80,7 +80,7 @@ export default function TripList() {
     }
 
     return (
-        <div className="w-full px-3 sm:px-6 py-10 pb-20 box-border">
+        <div className="w-full px-2 sm:px-6  pb-20 box-border">
             {error && (
                 <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
                     {error}

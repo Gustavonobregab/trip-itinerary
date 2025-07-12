@@ -20,9 +20,9 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="px-4 py-10 lg:py-18">
+    <section className="px-4 py-6 lg:py-18">
       <div className="max-w-screen-2xl mx-auto text-center px-4">
-      <h1 className="!text-[4vw] ms:!text-[10vw] !font-extrabold !text-black !leading-tight">
+      <h1 className="!text-[8vw] sm:!text-[4vw] mb-6 font-extrabold text-black  sm:leading-tight">
       <span
             className="inline-flex items-baseline justify-center mr-4"
             style={{ width: '10vw' }}
