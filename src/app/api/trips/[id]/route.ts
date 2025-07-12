@@ -16,11 +16,11 @@ export async function GET(
         name,
         type,
         date,
-        trip_id
+        trip_id,
+        position
       )
     `)
     .eq('id', id)
-
     .single();
 
   if (error || !data) {

@@ -7,6 +7,7 @@ import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities';
 import { useRouter } from 'next/navigation';
 import { IconArrowLeft, IconCategory, IconGripVertical } from '@tabler/icons-react';
+import { supabase } from '@/lib/supabaseClient';
 
 interface Trip {
   id: string;
@@ -26,10 +27,97 @@ interface ItineraryItem {
   name: string;
   type: string;
   date: string;
+  position?: number;
 }
 
 interface TripDetailsProps {
   id: string;
+}
+
+function SortableItem({ item }: { item: any }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="w-full h-20 bg-white rounded-lg shadow px-4 border flex items-center justify-between"
+    >
+      <div className="flex items-center gap-2 text-black text-base font-medium truncate">
+        <IconGripVertical size={18} className="text-gray-400 cursor-move" />
+        {item.name}
+      </div>
+      <div className="flex flex-col items-end justify-center text-right text-neutral-700 text-sm">
+        <span>{item.date}</span>
+        <span>{item.type}</span>
+      </div>
+    </div>
+  );
+}
+
+export  function ItineraryList({ trip }: { trip: any }) {
+  const sortedItems = [...trip.itinerary_items].sort((a, b) => a.position - b.position);
+  const [items, setItems] = useState(sortedItems);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    })
+  );
+
+  const handleDragEnd = async (event: any) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+  
+    const oldIndex = items.findIndex((item) => item.id === active.id);
+    const newIndex = items.findIndex((item) => item.id === over.id);
+  
+    const newItems = arrayMove(items, oldIndex, newIndex).map((item, index) => ({
+      ...item,
+      position: index + 1,
+    }));
+  
+    setItems(newItems);
+  
+    await fetch('/api/itinerary/update-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newItems.map(({ id, position }) => ({ id, position }))),
+    });
+  };
+  
+
+  return (
+    <div className="space-y-3">
+      <h2 className="text-xl font-semibold text-black mb-4">Itinerary</h2>
+      {items.length ? (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+            {items.map((item) => (
+              <SortableItem key={item.id} item={item} />
+            ))}
+          </SortableContext>
+        </DndContext>
+      ) : (
+        <p className="text-sm text-black">No itinerary items found.</p>
+      )}
+    </div>
+  );
 }
 
 export default function TripDetails({ id }: TripDetailsProps) {
@@ -41,6 +129,7 @@ export default function TripDetails({ id }: TripDetailsProps) {
     const fetchTrip = async () => {
       const res = await fetch(`/api/trips/${id}`);
       const data = await res.json();
+      console.log(data)
       setTrip(data);
       setLoading(false);
     };
@@ -107,32 +196,10 @@ export default function TripDetails({ id }: TripDetailsProps) {
           <div className="datagrid-content text-black">{trip.description}</div>
         </div>
       </div>
-      
-          <div className="w-full mt-10">
-          <h2 className="text-xl font-semibold text-black mb-4">Itinerary</h2>
 
-          {trip.itinerary_items?.length ? (
-            <div className="space-y-3">
-              {trip.itinerary_items.map((item) => (
-                <div
-                  key={item.id}
-                  className="w-full h-20 bg-white rounded-lg shadow px-4 border flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2 text-black text-base font-medium truncate">
-                    <IconGripVertical size={18} className="text-gray-400 cursor-move" />
-                    {item.name}
-                  </div>
-                  <div className="flex flex-col items-end justify-center text-right text-neutral-700 text-sm">
-                    <span>{item.date}</span>
-                    <span>{item.type}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-black">No itinerary items found.</p>
-          )}
-        </div>
+      <div className="w-full mt-10">
+        <ItineraryList trip={trip} />
+      </div>
     </div>
   );
   
