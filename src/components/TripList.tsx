@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
+import TripDetails from "./TripDetails";
 
 interface Trip {
     id: string;
@@ -15,6 +16,7 @@ export default function TripList() {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
+    const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
     const limit = 6;
 
     
@@ -63,6 +65,7 @@ export default function TripList() {
           <div
             key={trip.id}
             className="card w-full max-w-[460px] min-h-[320px] shadow-md overflow-hidden flex flex-col"
+            onClick={() => setSelectedTripId(trip.id)}
             >
             <div
             className="h-48 bg-cover bg-center"
@@ -90,6 +93,9 @@ export default function TripList() {
               )}
             </div>
           )}
+            {selectedTripId && (
+              <TripDetails id={selectedTripId} onClose={() => setSelectedTripId(null)} />
+              )}     
     </div>
   );
   
