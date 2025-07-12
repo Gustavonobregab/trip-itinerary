@@ -114,14 +114,10 @@ export default function TripDetails({ id }: TripDetailsProps) {
         </div>
         </div> 
 
-        <div className="flex justify-end mt-6">
-          <button onClick={() => setShowModal(true)} className="btn btn-dark">
-            + Add Itinerary
-          </button>
-        </div>
+
 
         <div className="w-full mt-8">
-          <ItineraryList trip={trip} />
+        <ItineraryList trip={trip} onAddItinerary={() => setShowModal(true)} />
         </div>
 
         {showModal && (
@@ -131,6 +127,8 @@ export default function TripDetails({ id }: TripDetailsProps) {
             onSuccess={refreshTrip}
           />
         )}
+
+
         </div>
           );
         }

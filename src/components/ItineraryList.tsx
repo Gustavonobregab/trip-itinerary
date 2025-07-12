@@ -43,8 +43,8 @@ function SortableItem({ item }: { item: any }) {
     );
   }
   
-  export  function ItineraryList({ trip }: { trip: any }) {
-    const sortedItems = [...trip.itinerary_items].sort((a, b) => a.position - b.position);
+  export function ItineraryList({ trip, onAddItinerary, }: { trip: any; onAddItinerary: () => void; }) {
+      const sortedItems = [...trip.itinerary_items].sort((a, b) => a.position - b.position);
     const [items, setItems] = useState(sortedItems);
 
     useEffect(() => {
@@ -85,6 +85,9 @@ function SortableItem({ item }: { item: any }) {
     return (
       <div className="space-y-3">
         <h2 className="text-xl font-semibold text-black mb-4">Itinerary</h2>
+        <button onClick={onAddItinerary} className="btn btn-dark mb-4">
+        + Add Itinerary
+      </button>
         {items.length ? (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
@@ -97,5 +100,6 @@ function SortableItem({ item }: { item: any }) {
           <p className="text-sm text-black">No itinerary items found.</p>
         )}
       </div>
+      
     );
   }
