@@ -9,12 +9,25 @@ export async function GET(
 
   const { data, error } = await supabase
     .from('trips')
-    .select('*')
+    .select(`
+      *,
+      itinerary_items (
+        id,
+        name,
+        type,
+        date,
+        trip_id
+      )
+    `)
     .eq('id', id)
+
     .single();
 
   if (error || !data) {
-    return NextResponse.json({ error: error?.message || 'Trip not found' }, { status: 404 });
+    return NextResponse.json(
+      { error: error?.message || 'Trip not found' },
+      { status: 404 }
+    );
   }
 
   return NextResponse.json(data);

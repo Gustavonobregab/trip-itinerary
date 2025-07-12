@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
-import TripDetails from "./TripDetails";
+import TripDetailsPage from "@/app/trip-details/[id]/page";
+import { useRouter } from 'next/navigation';
 
 interface Trip {
     id: string;
@@ -14,6 +15,7 @@ interface Trip {
   
 
 export default function TripList() {
+    const router = useRouter(); 
     const { user, isLoading } = useAuth();
     const [trips, setTrips] = useState<Trip[]>([]);
     const [page, setPage] = useState(1);
@@ -95,7 +97,7 @@ export default function TripList() {
                   <div className="mb-6 text-center text-gray-700">
                     {user
                       ? "Your trips."
-                      : "Those are public trips ."}
+                      : "Explore some public trips ."}
                   </div>
                 )}
             
@@ -110,8 +112,13 @@ export default function TripList() {
                     <div
                         key={trip.id}
                         className="relative h-[30rem] rounded-xl overflow-hidden cursor-pointer group"
-                        onClick={() => setSelectedTripId(trip.id)}
-                    >
+                        onClick={() => {
+                            if (user) {
+                              router.push(`/trip-details/${trip.id}`);
+                            } else {
+                              router.push('/login');
+                            }
+                          }}                    >
                         <div
                             className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
                             style={{ backgroundImage: `url(${trip.photo_url || ''})` }}
@@ -136,11 +143,6 @@ export default function TripList() {
                 </div>
             )}
 
-       
-
-            {selectedTripId && (
-                <TripDetails id={selectedTripId} onClose={() => setSelectedTripId(null)} />
-            )}
         </div>
     );
 }
