@@ -3,9 +3,12 @@
 import TripsPage from './main-trips/page';
 import '@tabler/core/dist/css/tabler.min.css';
 import '@/app/globals.css';
+import Navbar from '@/components/Navbar';
 
 export default function Home() {
   return (
+    <>
+    <Navbar /> 
     <section className="px-4 py-10 lg:py-28">
       <div className="max-w-screen-2xl mx-auto text-center px-4">
         <h1 className="text-[24vw] sm:text-[8vw] font-extrabold text-black leading-tight">
@@ -17,5 +20,6 @@ export default function Home() {
       </div>
       <TripsPage />
     </section>
+    </>
   );
 }

@@ -15,9 +15,6 @@ export default function LoginPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  useEffect(() => {
-   if (user) router.push('/main-trips');
-  }, [user]);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +33,7 @@ export default function LoginPage() {
     if (error) {
       setMessage('Invalid code.');
     } else {
-      router.push('/main-trips');
+      router.push('/');
     }
   };
 
