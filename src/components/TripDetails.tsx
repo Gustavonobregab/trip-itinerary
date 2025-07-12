@@ -8,6 +8,9 @@ import { CSS } from '@dnd-kit/utilities';
 import { useRouter } from 'next/navigation';
 import { IconArrowLeft, IconCategory, IconGripVertical } from '@tabler/icons-react';
 import { supabase } from '@/lib/supabaseClient';
+import { Modal } from '@tabler/core';
+import { ItineraryList } from './ItineraryList';
+import AddItineraryModal from './AddItineraryModal';
 
 interface Trip {
   id: string;
@@ -34,106 +37,21 @@ interface TripDetailsProps {
   id: string;
 }
 
-function SortableItem({ item }: { item: any }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: item.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="w-full h-20 bg-white rounded-lg shadow px-4 border flex items-center justify-between"
-    >
-      <div className="flex items-center gap-2 text-black text-base font-medium truncate">
-        <IconGripVertical size={18} className="text-gray-400 cursor-move" />
-        {item.name}
-      </div>
-      <div className="flex flex-col items-end justify-center text-right text-neutral-700 text-sm">
-        <span>{item.date}</span>
-        <span>{item.type}</span>
-      </div>
-    </div>
-  );
-}
-
-export  function ItineraryList({ trip }: { trip: any }) {
-  const sortedItems = [...trip.itinerary_items].sort((a, b) => a.position - b.position);
-  const [items, setItems] = useState(sortedItems);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    })
-  );
-
-  const handleDragEnd = async (event: any) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-  
-    const oldIndex = items.findIndex((item) => item.id === active.id);
-    const newIndex = items.findIndex((item) => item.id === over.id);
-  
-    const newItems = arrayMove(items, oldIndex, newIndex).map((item, index) => ({
-      ...item,
-      position: index + 1,
-    }));
-  
-    setItems(newItems);
-  
-    await fetch('/api/itinerary/update-order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newItems.map(({ id, position }) => ({ id, position }))),
-    });
-  };
-  
-
-  return (
-    <div className="space-y-3">
-      <h2 className="text-xl font-semibold text-black mb-4">Itinerary</h2>
-      {items.length ? (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-            {items.map((item) => (
-              <SortableItem key={item.id} item={item} />
-            ))}
-          </SortableContext>
-        </DndContext>
-      ) : (
-        <p className="text-sm text-black">No itinerary items found.</p>
-      )}
-    </div>
-  );
-}
 
 export default function TripDetails({ id }: TripDetailsProps) {
   const router = useRouter();
+  const [showModal, setShowModal] = useState(false);
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshTrip = async () => {
+    const res = await fetch(`/api/trips/${id}`);
+    const data = await res.json();
+    setTrip(data);
+  };
+
   useEffect(() => {
-    const fetchTrip = async () => {
-      const res = await fetch(`/api/trips/${id}`);
-      const data = await res.json();
-      console.log(data)
-      setTrip(data);
-      setLoading(false);
-    };
-    fetchTrip();
+    refreshTrip().then(() => setLoading(false));
   }, [id]);
 
   if (loading || !trip) {
@@ -157,8 +75,8 @@ export default function TripDetails({ id }: TripDetailsProps) {
       <img
         src={trip.photo_url}
         alt={trip.name}
-        className="max-w-5 h-64 object-cover rounded-lg shadow mb-6"
-      />
+        className="mx-auto max-w-full w-full max-h-100 object-cover rounded-lg shadow mb-6"
+        />
   
       <h1 className="text-3xl font-bold text-center text-black mb-6">{trip.name}</h1>
   
@@ -190,17 +108,29 @@ export default function TripDetails({ id }: TripDetailsProps) {
           <div className="datagrid-title text-sm text-black">Important Notes</div>
           <div className="datagrid-content text-black">{trip.important_notes || '–'}</div>
         </div>
-  
         <div className="datagrid-item sm:col-span-2">
           <div className="datagrid-title text-sm text-black">Description</div>
           <div className="datagrid-content text-black">{trip.description}</div>
         </div>
-      </div>
+        </div> 
 
-      <div className="w-full mt-10">
-        <ItineraryList trip={trip} />
-      </div>
-    </div>
-  );
-  
-}
+        <div className="flex justify-end mt-6">
+          <button onClick={() => setShowModal(true)} className="btn btn-dark">
+            + Add Itinerary
+          </button>
+        </div>
+
+        <div className="w-full mt-8">
+          <ItineraryList trip={trip} />
+        </div>
+
+        {showModal && (
+          <AddItineraryModal
+            tripId={trip.id}
+            onClose={() => setShowModal(false)}
+            onSuccess={refreshTrip}
+          />
+        )}
+        </div>
+          );
+        }
