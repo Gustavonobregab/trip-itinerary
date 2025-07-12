@@ -25,9 +25,14 @@ export default function TripList() {
         try {
         const res = await fetch(`/api/trips?page=${currentPage}&limit=${limit}`);
         const result = await res.json();
+
     
         if (res.ok) {
-          setTrips((prev) => [...prev, ...result.data]);
+          setTrips((prev) => {
+            const existingIds = new Set(prev.map((t) => t.id));
+            const uniqueNewTrips = (result.data as Trip[]).filter((t) => !existingIds.has(t.id));
+            return [...prev, ...uniqueNewTrips];
+          });
           setHasMore(result.data.length === limit);
         } else {
           console.error(result.error);
@@ -38,6 +43,7 @@ export default function TripList() {
         setLoading(false);
       }
       };
+
     
       useEffect(() => {
         fetchTrips(page);
