@@ -22,6 +22,7 @@ interface Trip {
   important_notes: string;
   description: string;
   itinerary_items?: ItineraryItem[];
+  photos?: string[];
 }
 
 interface ItineraryItem {
@@ -73,12 +74,60 @@ export default function TripDetails({ id }: TripDetailsProps) {
         Back
       </button>
   
-      <img
-        src={trip.photo_url}
-        alt={trip.name}
-        className="mx-auto max-w-full w-full max-h-100 object-cover rounded-lg shadow mb-6"
-        />
-  
+      <div id="trip-carousel" className="carousel slide mb-6" data-bs-ride="carousel">
+      <div className="carousel-indicators">
+        {[...(trip.photos || [trip.photo_url])].map((_, index) => (
+          <button
+            key={index}
+            type="button"
+            data-bs-target="#trip-carousel"
+            data-bs-slide-to={index}
+            className={index === 0 ? 'active' : ''}
+            aria-current={index === 0 ? 'true' : undefined}
+            aria-label={`Slide ${index + 1}`}
+          ></button>
+        ))}
+      </div>
+
+      <div className="carousel-inner rounded-lg shadow">
+        {[...(trip.photos || [trip.photo_url])].map((url, index) => (
+          <div key={index} className={`carousel-item ${index === 0 ? 'active' : ''}`}>
+            <img
+              src={url}
+              className="d-block w-100 object-cover"
+              alt={`Trip photo ${index + 1}`}
+              style={{ maxHeight: '400px', objectFit: 'cover' }}
+            />
+          </div>
+        ))}
+  </div>
+        <button
+          className="carousel-control-prev"
+          type="button"
+          data-bs-target="#trip-carousel"
+          data-bs-slide="prev"
+        >
+      <span
+          className="carousel-control-prev-icon bg-dark bg-opacity-50 rounded-full p-3"
+          style={{ width: '2.5rem', height: '2.5rem' }}
+          aria-hidden="true"
+        ></span>
+        <span className="visually-hidden">Previous</span>
+        </button>
+        <button
+          className="carousel-control-next"
+          type="button"
+          data-bs-target="#trip-carousel"
+          data-bs-slide="next"
+        >
+          <span
+            className="carousel-control-next-icon bg-dark bg-opacity-50 rounded-full p-3"
+            style={{ width: '2.5rem', height: '2.5rem' }}
+          ></span>
+          <span className="visually-hidden">Next</span>
+        </button>
+    </div>
+    
       <h1 className="text-3xl font-bold text-center text-black mb-6">{trip.name}</h1>
   
       <div className="grid sm:grid-cols-2 gap-4 border rounded-lg p-4 bg-white shadow datagrid">

@@ -62,7 +62,7 @@ function SortableItem({ item }: { item: any }) {
   }
   
   export function ItineraryList({ trip, onAddItinerary, }: { trip: any; onAddItinerary: () => void; }) {
-      const sortedItems = [...trip.itinerary_items].sort((a, b) => a.position - b.position);
+    const sortedItems = [...(trip.itinerary_items || [])].sort((a, b) => a.position - b.position);
     const [items, setItems] = useState(sortedItems);
 
     useEffect(() => {

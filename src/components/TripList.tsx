@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 import TripDetailsPage from "@/app/trip-details/[id]/page";
 import { useRouter } from 'next/navigation';
+import CreateTrip from "./CreateTrip";
 
 interface Trip {
     id: string;
@@ -19,6 +20,7 @@ export default function TripList() {
     const { user, isLoading } = useAuth();
     const [trips, setTrips] = useState<Trip[]>([]);
     const [page, setPage] = useState(1);
+    const [showCreateModal, setShowCreateModal] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
     const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
@@ -94,13 +96,25 @@ export default function TripList() {
             )}
 
             {!loading && !error && (
-                  <div className="mb-6 text-center text-gray-700">
+                  <div className="mb-0 text-center text-gray-700">
                     {user
-                      ? "Your trips."
+                      ? ""
                       : "Explore some public trips ."}
                   </div>
                 )}
-            
+
+            {user && (
+            <div className="mt-0 mb-6 flex justify-center">
+                <button
+                onClick={() => setShowCreateModal(true)}
+                className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition"
+                >
+                + Create Trip
+                </button>
+            </div>
+            )}
+
+        
             <div
                 className="grid gap-6"
                 style={{
@@ -141,6 +155,17 @@ export default function TripList() {
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">No Trips Yet</h2>
                     <p className="text-gray-600 mb-6">Start planning your next adventure!</p>
                 </div>
+            )}
+
+            {showCreateModal && (
+            <CreateTrip 
+                onClose={() => setShowCreateModal(false)} 
+                onTripCreated={() => {
+                setTrips([]);
+                setPage(1);
+                fetchTrips(1); 
+                }} 
+            />
             )}
 
         </div>
