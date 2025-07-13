@@ -36,10 +36,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     }
 
-    // (NOT TESTED) Handle multiple images
-    const photoUrlValue = Array.isArray(photo_url) 
-      ? photo_url.join('\n') 
-      : photo_url || '';
 
     const { data, error } = await supabase
       .from('trips')
@@ -49,7 +45,7 @@ export async function POST(request: Request) {
           name,
           start_date,
           end_date,
-          photo_url: photoUrlValue,
+          photo_url: photo_url,
           category,
           booking_ref,
           description,

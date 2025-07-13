@@ -12,7 +12,7 @@ export default function CreateTrip({ onClose, onTripCreated }: Props) {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [description, setDescription] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
@@ -23,8 +23,9 @@ export default function CreateTrip({ onClose, onTripCreated }: Props) {
 
       if (!token) return;
 
-      let imageUrl = '';
-      if (imageFile) {
+      const imageUrls: string[] = [];
+      
+      for (const imageFile of imageFiles) {
         const filePath = `${session.user.id}/${Date.now()}-${imageFile.name}`;
         const { error: uploadError } = await supabase
           .storage
@@ -38,7 +39,7 @@ export default function CreateTrip({ onClose, onTripCreated }: Props) {
           .from('trip-images')
           .getPublicUrl(filePath);
 
-        imageUrl = data.publicUrl;
+        imageUrls.push(data.publicUrl);
       }
 
       const res = await fetch('/api/trips', {
@@ -52,7 +53,7 @@ export default function CreateTrip({ onClose, onTripCreated }: Props) {
           start_date: startDate,
           end_date: endDate,
           description,
-          photo_url: [imageUrl]
+          photo_url: imageUrls
         })
       });
 
@@ -67,12 +68,23 @@ export default function CreateTrip({ onClose, onTripCreated }: Props) {
     }
   };
 
+  const handleFileSelect = (files: FileList | null) => {
+    if (files) {
+      const newFiles = Array.from(files);
+      setImageFiles(prev => [...prev, ...newFiles]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center px-4"
       style={{ background: 'rgba(0,0,0,0.5)' }}
     >
-      <div className="bg-white p-6 rounded-lg shadow w-full max-w-md">
+      <div className="bg-white p-6 rounded-lg shadow w-full max-w-md max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">Create a New Trip</h2>
   
         <div
@@ -81,15 +93,31 @@ export default function CreateTrip({ onClose, onTripCreated }: Props) {
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
-            const file = e.dataTransfer.files?.[0];
-            if (file) setImageFile(file);
+            const files = e.dataTransfer.files;
+            if (files) handleFileSelect(files);
           }}
         >
-          {imageFile ? (
-            <p className="text-sm text-gray-700">{imageFile.name}</p>
+          {imageFiles.length > 0 ? (
+            <div className="space-y-2">
+              <p className="text-sm text-gray-700 font-medium">Selected Images ({imageFiles.length}):</p>
+              {imageFiles.map((file, index) => (
+                <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                  <span className="text-sm text-gray-600 truncate">{file.name}</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeImage(index);
+                    }}
+                    className="text-red-500 hover:text-red-700 text-sm ml-2"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
           ) : (
             <p className="text-sm text-gray-500">
-              Drag & drop an image here or click to select
+              Drag & drop images here or click to select
             </p>
           )}
   
@@ -97,7 +125,11 @@ export default function CreateTrip({ onClose, onTripCreated }: Props) {
             id="trip-image-input"
             type="file"
             accept="image/*"
-            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+            multiple
+            onChange={(e) => {
+              handleFileSelect(e.target.files);
+              e.target.value = '';
+            }}            
             className="hidden"
           />
         </div>
@@ -148,3 +180,4 @@ export default function CreateTrip({ onClose, onTripCreated }: Props) {
   );
   
 }
+

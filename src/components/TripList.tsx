@@ -10,7 +10,7 @@ import CreateTrip from "./CreateTrip";
 interface Trip {
     id: string;
     name: string;
-    photo_url: string;
+    photo_url: string[];
     description: string;
   }
   
@@ -109,7 +109,7 @@ export default function TripList() {
                 onClick={() => setShowCreateModal(true)}
                 className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition"
                 >
-                + Create Trip
+                 Create Trip
                 </button>
             </div>
             )}
@@ -135,8 +135,8 @@ export default function TripList() {
                           }}                    >
                         <div
                             className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
-                            style={{ backgroundImage: `url(${trip.photo_url || ''})` }}
-                        />
+                            style={{ backgroundImage: `url(${Array.isArray(trip.photo_url) ? trip.photo_url[0] : trip.photo_url || ''})` }}
+                            />
                         <div className="absolute inset-0 bg-black/60" />
                         <div className="absolute inset-0 flex flex-col justify-end p-6 z-10">
                             <h3 className="text-white text-2xl font-bold">{trip.name}</h3>
