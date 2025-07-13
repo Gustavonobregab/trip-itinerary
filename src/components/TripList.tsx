@@ -25,7 +25,7 @@ export default function TripList() {
     const [loading, setLoading] = useState(false);
     const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const limit = 6;
+    const limit = 12;
 
     
     const fetchTrips = async (currentPage: number) => {  
@@ -96,10 +96,10 @@ export default function TripList() {
             )}
 
             {!loading && !error && (
-                  <div className="mb-0 text-center text-gray-700">
+                  <div className="mb-4 text-center text-gray-700">
                     {user
                       ? ""
-                      : "Explore some public trips ."}
+                      : "Explore some public trips:"}
                   </div>
                 )}
 
