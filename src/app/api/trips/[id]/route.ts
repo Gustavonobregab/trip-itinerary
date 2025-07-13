@@ -17,7 +17,8 @@ export async function GET(
         type,
         date,
         trip_id,
-        position
+        position,
+        location
       )
     `)
     .eq('id', id)

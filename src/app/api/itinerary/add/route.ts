@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabaseClient';
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { trip_id, name, type, date } = body;
+  const { trip_id, name, type, date, location } = body;
 
   if (!trip_id || !name || !type || !date) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -29,6 +29,7 @@ export async function POST(req: Request) {
       type,
       date,
       position: nextPosition,
+      location
     },
   ]);
 

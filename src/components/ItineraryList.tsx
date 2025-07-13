@@ -22,19 +22,37 @@ function SortableItem({ item }: { item: any }) {
       transform: CSS.Transform.toString(transform),
       transition,
     };
+
+    const router = useRouter();
+
+    const handleClick = () => {
+      if (item.location) {
+        window.open(item.location, '_blank', 'noopener,noreferrer');
+      }
+    };
   
     return (
       <div
         ref={setNodeRef}
         style={style}
+        onClick={handleClick}
         {...attributes}
         {...listeners}
         className="w-full h-20 bg-white rounded-lg shadow px-4 border flex items-center justify-between"
       >
-        <div className="flex items-center gap-2 text-black text-base font-medium truncate">
-          <IconGripVertical size={18} className="text-gray-400 cursor-move" />
-          {item.name}
-        </div>
+         <div
+        className="flex items-center gap-2 text-black text-base font-medium truncate"
+      >
+        <span
+          onClick={(e) => e.stopPropagation()} 
+          {...attributes}
+          {...listeners}
+          className="text-gray-400 cursor-move"
+        >
+          <IconGripVertical size={18} />
+        </span>
+        {item.name}
+      </div>
         <div className="flex flex-col items-end justify-center text-right text-neutral-700 text-sm">
           <span>{item.date}</span>
           <span>{item.type}</span>

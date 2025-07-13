@@ -31,6 +31,7 @@ interface ItineraryItem {
   type: string;
   date: string;
   position?: number;
+  location?: string;
 }
 
 interface TripDetailsProps {
