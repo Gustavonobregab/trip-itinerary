@@ -4,7 +4,7 @@ import TripDetails from '@/components/TripDetails';
 import { useParams } from 'next/navigation';
 
 export default function TripDetailsPage() {
-  const { id } = useParams();
+  const { id } = useParams() as { id: string };
 
   if (!id || typeof id !== 'string') {
     return <div className="p-4 text-center text-red-600">Trip ID is invalid.</div>;
